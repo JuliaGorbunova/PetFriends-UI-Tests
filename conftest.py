@@ -8,7 +8,7 @@ def pytest_runtest_makereport(item,call):
     rep = outcome.get_result()
     setattr(item, "rep_" + rep.when, rep)
     return rep
-#
+
 @pytest.fixture
 def web_browser(request,selenium):
     browser=selenium

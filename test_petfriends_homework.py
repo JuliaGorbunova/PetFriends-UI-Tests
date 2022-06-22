@@ -44,11 +44,11 @@ def test_quantity_of_my_pets():
 def test_half_of_the_pets_have_photos():
     # получаем фото питомцев
     images = driver.find_elements_by_css_selector('div th > img')
-    # images = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR,'div th > img')))
+    # images = WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR,'div th > img')))
     count=0
-    # проходим циклом по массиву фотографий, считаем количество фото с атрибутом scr (значит фото есть)
+    # проходим циклом по массиву фотографий, считаем количество фото й
     for i in range(len(images)):
-        if (images[i].get_attribute('src')):
+        if 'base64' in images[i].get_attribute('src'):
             count += 1
     #  ставим условие по количеству в зависимости от того, четное или нечетное число питомцев (фотографий)
     if (len(images) % 2) == 0:

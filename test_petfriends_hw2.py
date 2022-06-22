@@ -1,27 +1,34 @@
 from selenium import webdriver
 driver = webdriver.Chrome()
 import time
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import pytest
+driver = webdriver.Chrome()
 
-# @pytest.fixture(autouse=True, scope="function")
-def test_preparation(selenium):
-    # заходим в свой аккаунт, проверяем что мы на странице, где все питомцы
-    selenium.get('https://petfriends.skillfactory.ru/login')
-    time.sleep(5)
-    selenium.find_element_by_id('email').send_keys('svy-yuliana@yandex.ru')
-    selenium.find_element_by_id('pass').send_keys('7Fevrala7')
-    selenium.find_element_by_css_selector('button[type="submit"]').click()
-    assert selenium.current_url == "https://petfriends.skillfactory.ru/all_pets"
-    selenium.find_element_by_link_text('Мои питомцы').click()
-    assert selenium.current_url == "https://petfriends.skillfactory.ru/my_pets"
+def test_cards_of_pets():
+    driver = webdriver.Chrome(r'C:\Users\Юлия\PycharmProjects\Selenium\chromedriver.exe')
+    driver.implicitly_wait(5)
+    # авторизуемся, заходим на страницу "мои питомцы"
+    driver.get('https://petfriends.skillfactory.ru/login')
+    # driver.find_element_by_id('email').send_keys('svy-yuliana@yandex.ru')
+    # driver.find_element_by_id('pass').send_keys('7Fevrala7')
+    # driver.find_element_by_css_selector('button[type="submit"]').click()
+    WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "email"))).send_keys('svy-yuliana@yandex.ru')
+    WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, "pass"))).send_keys('7Fevrala7')
+    WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[type="submit"]'))).click()
+    driver.find_element_by_link_text('Мои питомцы').click()
     #получаем массив всех моих питомцев
-    info_of_my_pets = selenium.find_elements_by_css_selector('div td')
+    # info_of_my_pets = driver.find_elements_by_css_selector('div td')
+    info_of_my_pets = WebDriverWait(driver, 5).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div td')))
     # формируем списки имен, типов и возрастов животных
-    names = info_of_my_pets[::4]
+    names = info_of_my_pets[0::4]
     types = info_of_my_pets[1::4]
     ages = info_of_my_pets[2::4]
     #получаем кусок текста с логином, количеством питомцев, друзей и сообщений
-    quantity_of_pets_full=selenium.find_element_by_xpath('/html/body/div[1]/div/div[1]').text
+    # quantity_of_pets_full=driver.find_element_by_xpath('/html/body/div[1]/div/div[1]').text
+    quantity_of_pets_full = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.\\.col-sm-4.left'))).text
     # получаем индекс символа буквы П слова "Питомцев"
     index_pets=quantity_of_pets_full.find('Питомцев')
     # получаем индекс символа буквы Д слова "Друзей"
@@ -32,16 +39,17 @@ def test_preparation(selenium):
     # проверяем, соответствует ли количество питомцев по профилю реальному количеству имен питомцев
     assert int(quantity_of_pets)==len(names),"В таблице присутствуют не все питомцы"
     # получаем фото питомцев
-    images = selenium.find_elements_by_css_selector('.table table-hover tbody tr th img')
+    # images = driver.find_elements_by_css_selector('.table table-hover tbody tr th img')
+    images = WebDriverWait(driver, 15).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'tr th img')))
     count=0
-    # проходим циклом по массиву фотографий, считаем количество фото с атрибутом scr (значит фото есть)
+    # проходим циклом по массиву фотографий, считаем количество фото с текстом base64 в атрибуте src
     for i in range(len(images)):
-        if (images[i].get_attribute('src')):
+        if 'base64' in images[i].get_attribute('src'):
             count+=1
-        if (len(images)//2)==0:
-            assert count>=(len(images)/2), 'Фото присутствует менее чем у половины питомцев'
-        else:
-            assert count>=(len(images)/2+1), 'Фото присутствует менее чем у половины питомцев'
+    if (len(images)%2)==0:
+        assert count>=(len(images)/2), 'Фото присутствует менее чем у половины питомцев'
+    else:
+        assert count>=(len(images)/2+1), 'Фото присутствует менее чем у половины питомцев'
     # проверяем, что у всех питомцев есть имя
     assert '' not in names,'Не у всех питомцев есть имя'
     # проверяем, что у всех питомцев есть порода
